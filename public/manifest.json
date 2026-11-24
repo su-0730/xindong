@@ -1,0 +1,19 @@
+{
+  "name": "心动日常 · 情侣小屋",
+  "short_name": "心动日常",
+  "description": "两个人，一个小屋，一起记录每一天。双人实时同步。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff5f6",
+  "theme_color": "#ff6b81",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

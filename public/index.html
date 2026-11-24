@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#FFF9E6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.json">
+<title>心动日常 · 情侣小屋</title>
+<link rel="stylesheet" href="/vendor/leaflet.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ===== 登录页 ===== -->
+<div class="page active" id="p-login">
+  <div class="login-box">
+    <div class="brand">💕</div>
+    <h1>心动日常</h1>
+    <p class="sub">两个人，一个小屋，一起记录每一天</p>
+    <div class="login-card">
+      <div id="wxBlock" class="hide">
+        <button class="wx-btn" onclick="wxLogin()"><span class="wx-ico">💬</span> 微信登录</button>
+        <div class="wx-divider"><span>或</span></div>
+      </div>
+      <div class="field"><label>输入昵称（演示登录，无需微信）</label>
+        <input id="guestName" placeholder="比如：曜宝" maxlength="12"></div>
+      <button class="primary" onclick="guestLogin()">进入小屋</button>
+      <div class="hint" id="loginHint"></div>
+    </div>
+    <div class="update-tip hide" id="updateTip"></div>
+  </div>
+</div>
+
+<!-- ===== 组队页 ===== -->
+<div class="page" id="p-team">
+  <div class="login-box">
+    <div class="brand">🏠</div>
+    <h1 style="font-size:24px">住进同一个小屋</h1>
+    <p class="sub" id="teamWho"></p>
+    <div class="login-card">
+      <div class="tabs">
+        <div class="tab active" data-t="invite">我有邀请码</div>
+        <div class="tab" data-t="create">生成邀请码</div>
+      </div>
+      <div id="t-join">
+        <div class="field"><label>对方发来的邀请码</label>
+          <input id="joinCode" placeholder="输入6位邀请码" maxlength="6" style="text-transform:uppercase"></div>
+        <button class="primary" onclick="joinCouple()">加入 TA 的小屋</button>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6">
+          只有自己一个人？输入<span style="color:var(--wood2);font-weight:700">自己的邀请码</span>也能先进小屋体验<br>（对方装好后随时可以加入）
+        </p>
+      </div>
+      <div id="t-create" class="hide" style="text-align:center">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px">把邀请码发给 TA，TA 输入后就组队啦</p>
+        <div class="room-code" id="inviteCodeShow" style="font-size:30px;font-weight:800;letter-spacing:8px;color:var(--wood2);background:#FFF3C4;border-radius:18px;padding:16px;margin-bottom:8px">------</div>
+        <button class="ghost" onclick="copyInvite()">复制邀请码</button>
+        <button class="ghost" id="waitPartnerBtn" onclick="checkPartner()">我已发送，检查是否组队</button>
+      </div>
+      <div class="hint" id="teamHint"></div>
+      <button class="ghost" onclick="logout()" style="margin-top:16px;color:var(--muted)">退出登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 主应用 ===== -->
+<div class="page" id="p-main">
+
+  <!-- 首页：小屋场景 -->
+  <div id="homePage">
+    <div class="scene">
+      <div class="scene-top">
+        <div class="stat-pills">
+          <div class="pill heart"><span class="p-ico">💗</span><span id="loveScore">83</span><span class="p-add">+</span></div>
+          <div class="pill coin"><span class="p-ico">🪙</span><span id="coinScore">548</span><span class="p-add">+</span></div>
+        </div>
+        <div class="scene-top-r">
+          <div class="icon-btn" id="syncDot" style="font-size:11px;color:#4CAF50">●</div>
+          <div class="icon-btn" onclick="go('chat')">💬<span class="dot" id="msgDot">1</span></div>
+          <div class="icon-btn" onclick="go('settings')">🚪</div>
+        </div>
+      </div>
+
+      <!-- 木牌天数 -->
+      <div class="day-sign">
+        <div class="ds-label">我们在一起</div>
+        <div class="ds-num"><span id="daysCount">0</span><small>天</small></div>
+      </div>
+
+      <!-- 左侧浮动功能 -->
+      <div class="side-col">
+        <div class="side-item" onclick="go('check')">
+          <div class="side-ico">📋<span class="dot">19</span></div>
+          <div class="s-label">任务</div>
+        </div>
+        <div class="side-item" onclick="go('chat')">
+          <div class="side-ico">📢<span class="dot">5</span></div>
+          <div class="s-label">消息</div>
+        </div>
+        <div class="side-item" onclick="go('check')">
+          <div class="side-ico">🧧<span class="hot">Hot</span></div>
+          <div class="s-label">365打卡</div>
+        </div>
+        <div class="side-item" onclick="go('anniv')">
+          <div class="side-ico">🎁</div>
+          <div class="s-label">礼物</div>
+        </div>
+      </div>
+
+      <!-- 场景插画（SVG 手绘风客厅） -->
+      <svg class="illust" viewBox="0 0 400 460" preserveAspectRatio="xMidYMax meet" style="margin-top:150px">
+        <!-- 墙纸条纹 -->
+        <defs>
+          <pattern id="stripe" width="28" height="460" patternUnits="userSpaceOnUse">
+            <rect width="14" height="460" fill="#FFF1C9" opacity=".55"/>
+          </pattern>
+          <linearGradient id="sofaG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFD98A"/><stop offset="1" stop-color="#F0B650"/>
+          </linearGradient>
+          <linearGradient id="rugG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFC5C5"/><stop offset="1" stop-color="#F5A8A8"/>
+          </linearGradient>
+        </defs>
+
+        <!-- 地板 -->
+        <rect x="0" y="330" width="400" height="130" fill="#C9E4D8"/>
+        <line x1="0" y1="392" x2="400" y2="392" stroke="#B0D0C2" stroke-width="2"/>
+        <line x1="120" y1="330" x2="120" y2="460" stroke="#B0D0C2" stroke-width="2"/>
+        <line x1="250" y1="330" x2="250" y2="460" stroke="#B0D0C2" stroke-width="2"/>
+
+        <!-- 沙发 -->
+        <rect x="96" y="238" width="180" height="66" rx="22" fill="url(#sofaG)"/>
+        <rect x="104" y="228" width="164" height="34" rx="16" fill="#FFE3AC"/>
+        <rect x="88" y="252" width="26" height="56" rx="13" fill="#F5C46E"/>
+        <rect x="258" y="252" width="26" height="56" rx="13" fill="#F5C46E"/>
+        <rect x="106" y="300" width="16" height="24" rx="6" fill="#C98B57"/>
+        <rect x="250" y="300" width="16" height="24" rx="6" fill="#C98B57"/>
+        <!-- 靠枕 -->
+        <rect x="212" y="236" width="52" height="40" rx="14" fill="#FFB8C8" transform="rotate(-8 238 256)"/>
+
+        <!-- 人：坐沙发看手机 -->
+        <ellipse cx="176" cy="300" rx="34" ry="12" fill="#E8C280" opacity=".5"/>
+        <!-- 腿 -->
+        <path d="M166 300 q6 26 2 44" stroke="#6FBF9E" stroke-width="15" fill="none" stroke-linecap="round"/>
+        <path d="M192 300 q8 24 4 42" stroke="#6FBF9E" stroke-width="15" fill="none" stroke-linecap="round"/>
+        <!-- 鞋 -->
+        <ellipse cx="166" cy="348" rx="10" ry="6" fill="#FFF"/>
+        <ellipse cx="196" cy="346" rx="10" ry="6" fill="#FFF"/>
+        <!-- 身体 -->
+        <path d="M150 250 q4 -26 26 -26 q22 0 26 26 l4 34 q-30 8 -60 0 z" fill="#FFF6E0"/>
+        <path d="M150 250 q4 -26 26 -26 q22 0 26 26" fill="none" stroke="#E8D5B0" stroke-width="2"/>
+        <!-- 手 + 手机 -->
+        <path d="M156 268 q-12 10 -6 22" stroke="#FFF6E0" stroke-width="9" fill="none" stroke-linecap="round"/>
+        <rect x="138" y="278" width="20" height="26" rx="4" fill="#FFD3DE" transform="rotate(-16 148 291)"/>
+        <!-- 头 -->
+        <circle cx="176" cy="216" r="26" fill="#FFF0DC"/>
+        <!-- 头发 -->
+        <path d="M150 214 q-2 -32 26 -32 q28 0 26 32 q-6 -16 -26 -16 q-20 0 -26 16 z" fill="#F7A8B8"/>
+        <path d="M150 214 q-6 26 2 40 q-12 -18 -8 -40 z" fill="#F7A8B8"/>
+        <path d="M202 214 q6 26 -2 40 q12 -18 8 -40 z" fill="#F7A8B8"/>
+        <!-- 脸 -->
+        <circle cx="167" cy="218" r="2.4" fill="#8A6F55"/>
+        <circle cx="185" cy="218" r="2.4" fill="#8A6F55"/>
+        <path d="M171 226 q5 4 10 0" stroke="#E88A9E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="160" cy="224" r="4" fill="#FFC5D0" opacity=".7"/>
+        <circle cx="192" cy="224" r="4" fill="#FFC5D0" opacity=".7"/>
+
+        <!-- 地毯 -->
+        <ellipse cx="200" cy="404" rx="150" ry="52" fill="url(#rugG)"/>
+        <ellipse cx="200" cy="404" rx="128" ry="42" fill="none" stroke="#FFD8D8" stroke-width="3"/>
+        <!-- 地毯爱心 -->
+        <path d="M170 400 c-8-7-16-13-16-21 a9 9 0 0 1 16-5 a9 9 0 0 1 16 5 c0 8-8 14-16 21z" fill="#FF9EAE" opacity=".65"/>
+        <path d="M232 412 c-6-5-12-10-12-16 a7 7 0 0 1 12-4 a7 7 0 0 1 12 4 c0 6-6 11-12 16z" fill="#FF9EAE" opacity=".55"/>
+
+        <!-- 拖鞋 -->
+        <ellipse cx="118" cy="356" rx="15" ry="8" fill="#FFB8C8"/>
+        <ellipse cx="118" cy="353" rx="7" ry="5" fill="#FF8FA8"/>
+        <ellipse cx="292" cy="366" rx="15" ry="8" fill="#A8D8EA"/>
+        <ellipse cx="292" cy="363" rx="7" ry="5" fill="#7BC0DC"/>
+
+        <!-- 电视柜 + 电视 -->
+        <rect x="298" y="300" width="94" height="52" rx="8" fill="#E8C280"/>
+        <rect x="304" y="252" width="82" height="58" rx="10" fill="#B87A47"/>
+        <rect x="310" y="258" width="70" height="46" rx="7" fill="#CFE8F5"/>
+        <path d="M320 252 l12-14 M368 252 l-10-14" stroke="#B87A47" stroke-width="3" stroke-linecap="round"/>
+        <!-- 电视里的小鲸鱼 -->
+        <g transform="translate(330,272) scale(.55)">
+          <path d="M0 12 q10 -14 26 -12 q4 -8 10 -6 q-2 6 0 10 q10 4 12 14 q-14 8 -30 4 q-12 -3 -18 -10z" fill="#5B8DEF"/>
+          <circle cx="10" cy="12" r="2" fill="#fff"/>
+          <path d="M38 18 q8 6 4 12 q-6 -2 -8 -8z" fill="#5B8DEF"/>
+        </g>
+        <!-- 鲸鱼气泡 -->
+        <path d="M318 266 q-14 4 -12 14 q2 10 16 8" fill="#fff" opacity=".75"/>
+
+        <!-- 毛线球 -->
+        <circle cx="352" cy="392" r="16" fill="#F5C46E"/>
+        <path d="M340 386 q12 8 24 0 M340 396 q12 8 24 0" stroke="#D9A445" stroke-width="2" fill="none"/>
+      </svg>
+
+      <!-- 像素小鲸鱼 -->
+      <svg class="whale-pixel" viewBox="0 0 24 18">
+        <g fill="#4A7FE0">
+          <rect x="1" y="5" width="3" height="2"/><rect x="4" y="4" width="3" height="3"/>
+          <rect x="7" y="3" width="3" height="4"/><rect x="10" y="3" width="3" height="5"/>
+          <rect x="13" y="4" width="2" height="5"/><rect x="15" y="5" width="2" height="4"/>
+          <rect x="5" y="7" width="11" height="4"/><rect x="17" y="7" width="2" height="3"/>
+          <rect x="4" y="11" width="8" height="2"/><rect x="19" y="4" width="2" height="2"/>
+          <rect x="20" y="6" width="2" height="3"/>
+        </g>
+        <rect x="15" y="7" width="1.6" height="1.6" fill="#fff"/>
+      </svg>
+
+    </div>
+
+    <!-- 今日打卡卡片 -->
+    <div class="wrap">
+      <div class="card">
+        <h2>📋 今日打卡 <span class="badge" id="todayDate"></span></h2>
+        <div class="prog-wrap">
+          <svg class="ring" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15.9" fill="none" stroke="#FFE3EA" stroke-width="3.5"/>
+            <circle id="ringFill" cx="18" cy="18" r="15.9" fill="none" stroke="#FF9EB5" stroke-width="3.5"
+              stroke-dasharray="0 100" stroke-linecap="round" transform="rotate(-90 18 18)"/>
+            <text id="ringPct" x="18" y="22" text-anchor="middle" font-size="10" fill="#E86A6A" font-weight="700">0%</text>
+          </svg>
+          <div class="ring-txt">今天完成 <b id="doneCnt">0</b> / <span id="totalCnt">0</span> 项<br>
+            <small>一起坚持，让爱变成习惯</small></div>
+        </div>
+      </div>
+      <div class="card" id="homeTasks"></div>
+    </div>
+  </div>
+
+  <!-- 百宝袋 -->
+  <div id="funcsPage" class="subpage">
+    <div class="bag-hero">
+      <div class="bh-title">百·宝·袋</div>
+      <div class="bh-sub">所有心动小功能都在这里</div>
+    </div>
+    <div class="bag-frame">
+      <div class="sign-row"><div class="wood-sign">心动功能</div><div class="sign-line"></div></div>
+      <div class="func-grid" id="gridHeart"></div>
+      <div class="sign-row"><div class="wood-sign">娱乐天地</div><div class="sign-line"></div></div>
+      <div class="func-grid" id="gridFun"></div>
+    </div>
+  </div>
+
+  <!-- 管理员中心 -->
+  <div id="adminPage" class="subpage">
+    <div class="topbar">
+      <button class="tb-back" onclick="go('mine')">←</button>
+      <div class="tb-pill">🛡️ 管理员中心</div>
+      <button class="tb-act" onclick="loadAdminOverview()">🔄</button>
+    </div>
+    <div class="wrap" style="padding-bottom:30px">
+      <div class="card" style="background:linear-gradient(150deg,#3A3048,#5A4A72);border-color:#FFD966">
+        <div style="text-align:center;font-size:40px">🛡️</div>
+        <div style="text-align:center;color:#FFD966;font-weight:800;font-size:17px;margin-top:6px">管理员权限已激活</div>
+        <div style="text-align:center;color:#D8C9E8;font-size:11px;margin-top:4px">你的身份高于普通用户</div>
+      </div>
+      <div class="card">
+        <h2>📊 系统总览</h2>
+        <div id="adminStats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
+        <button class="ghost" onclick="openPerms()" style="margin-top:14px">🛡️ 权限守护中心</button>
+      </div>
+      <div class="card">
+        <h2>🎟️ 生成兑换码</h2>
+        <div class="field"><label>兑换码（留空随机生成）</label><input id="adCode" placeholder="如：NEW888"></div>
+        <div class="field"><label>有效天数（0=永久）</label><input id="adDuration" type="number" value="0" min="0"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0"><input type="checkbox" id="adAdmin"> 同时授予管理员权限</label>
+        <button class="primary" onclick="adminCreateCode()">生成兑换码</button>
+        <div id="adResult" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <h2>📋 兑换码列表</h2>
+        <div id="adminCodes"></div>
+      </div>
+      <div class="card">
+        <h2>👥 用户与情侣对</h2>
+        <div id="adminUsers"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 权限中心 -->
+  <div id="permPage" class="subpage">
+    <div class="topbar">
+      <button class="tb-back" onclick="go('mine')">←</button>
+      <div class="tb-pill">🛡️ 权限守护中心</div>
+      <button class="tb-act" onclick="checkAllPerms();collectDevice()">🔄</button>
+    </div>
+    <div class="wrap" style="padding-bottom:30px">
+      <div class="card perm-hero">
+        <div style="font-size:44px;text-align:center">🛡️</div>
+        <h2 style="justify-content:center;margin-top:8px">开启守护，让 TA 更安心</h2>
+        <p style="font-size:12px;color:var(--text2);text-align:center;line-height:1.8;margin:8px 0 16px">
+          开启越多权限，我就能越好地守护你和小屋。<br>所有权限状态会同步给对方查看。
+        </p>
+        <button class="primary" onclick="askAllPerms()">🚀 一键开启全部权限</button>
+        <div id="permSummary" style="margin-top:18px"></div>
+      </div>
+      <div class="card">
+        <h2>📋 权限列表 <span class="badge" id="permCount"></span></h2>
+        <div id="permList"></div>
+      </div>
+      <div class="card">
+        <h2>💕 对方的守护状态</h2>
+        <div id="partnerPermBox"></div>
+        <button class="ghost" onclick="renderPartnerPerms()">刷新对方状态</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);text-align:center;line-height:1.7;padding:0 10px">
+        部分权限（蓝牙/NFC/传感器等）由浏览器或系统控制，能否开启取决于手机与浏览器支持情况；不支持的会显示"不支持"。
+      </p>
+    </div>
+  </div>
+
+  <!-- 通用工具页（由百宝袋功能进入） -->
+  <div id="toolPage" class="subpage">
+    <div class="topbar">
+      <button class="tb-back" onclick="go('home')">←</button>
+      <div class="tb-pill" id="toolTitle">工具</div>
+      <button class="tb-act" onclick="go('home')">🏠</button>
+    </div>
+    <div class="wrap" id="toolBody"></div>
+  </div>
+
+  <!-- 心情日记（双人情绪日历） -->
+  <div id="diaryPage" class="subpage">
+    <div class="diary-head">
+      <div class="dh-left"><span class="dh-icon">📖</span> 心情日记</div>
+      <div class="dh-month" id="calTitle">2026年11月 ▾</div>
+      <div class="dh-nav">
+        <button onclick="calShift(-1)">‹</button>
+        <button onclick="calShift(1)">›</button>
+      </div>
+    </div>
+
+    <div class="mood-cal">
+      <div class="mc-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+      <div class="mc-grid" id="moodGrid"></div>
+    </div>
+
+    <div class="mood-legend">
+      <span class="ml-me">🟠 我是上面</span>
+      <span class="ml-ta">🔵 TA是下面</span>
+    </div>
+
+    <div class="wrap" style="padding-top:8px">
+      <div class="card">
+        <h2>📝 <span id="diaryDateLabel">今天</span>的心情</h2>
+        <div class="mood-pick-title">我的心情</div>
+        <div class="mood-row" id="moodRow"></div>
+        <textarea id="diaryText" class="diary-area" placeholder="写下今天的心情、发生的事…"></textarea>
+        <button class="primary" onclick="saveDiary()" style="margin-top:12px">保存日记</button>
+      </div>
+      <div class="card">
+        <h2>📖 我们的日记 <span class="badge" id="diaryCount"></span></h2>
+        <div id="diaryList"></div>
+      </div>
+    </div>
+    <button class="fab" onclick="focusDiary()">✏️</button>
+  </div>
+
+  <!-- 商城 -->
+  <div id="shopPage" class="subpage">
+    <div class="bag-hero" style="padding-top:18px">
+      <div class="bh-title">心动商城</div>
+      <div class="bh-sub">给 TA 的小惊喜，正在路上</div>
+    </div>
+    <div class="wrap">
+      <div class="card center" style="padding:46px 20px">
+        <div style="font-size:60px">🎁</div>
+        <p style="color:var(--text2);font-size:13px;margin-top:14px;line-height:1.8">
+          心动好物即将上架<br>先用「存钱罐」攒起恋爱基金吧
+        </p>
+        <button class="ghost" onclick="go('pig')">去存钱罐 🐷</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人中心 -->
+  <div id="minePage" class="subpage">
+    <div class="topbar">
+      <button class="tb-back" onclick="go('home')">←</button>
+      <div class="tb-pill">在一起 <b id="mineDays">0</b> 天</div>
+      <button class="tb-act" onclick="go('settings')">⚙️</button>
+    </div>
+    <div class="mine-hero">
+      <div class="mh-row">
+        <div class="mh-avatars"><div class="mh-av" id="mhAv1">🙂</div><div class="mh-av" id="mhAv2">💗</div></div>
+        <div class="mh-info">
+          <div class="mh-names"><span id="mineNameA">我</span><span class="mh-heart">❤</span><span id="mineNameB">TA</span></div>
+          <div class="mh-link" onclick="go('settings')">恋爱信息 ›</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-title">心动服务</div>
+      <div class="svc-grid">
+        <div class="svc-item" onclick="go('check')"><div class="svc-ico c-cream">😴</div><div class="svc-name">睡眠监督</div></div>
+        <div class="svc-item" onclick="toast('健康用机准备中')"><div class="svc-ico c-pink">📱</div><div class="svc-name">健康用机</div></div>
+        <div class="svc-item" onclick="toast('敏感记录准备中')"><div class="svc-ico c-blue">📋</div><div class="svc-name">敏感记录</div></div>
+        <div class="svc-item" onclick="toast('通知已开启')"><div class="svc-ico c-mint">🔔</div><div class="svc-name">实时通知</div></div>
+        <div class="svc-item" onclick="openTool('vip','互动截屏','📸')"><div class="svc-ico c-lav">👑<span class="tag">VIP</span></div><div class="svc-name">互动截屏</div></div>
+        <div class="svc-item" onclick="toast('个性化首页准备中')"><div class="svc-ico c-blue">⭐</div><div class="svc-name">个性化首页</div></div>
+        <div class="svc-item" onclick="toast('成就勋章准备中')"><div class="svc-ico c-lav">🎖️</div><div class="svc-name">成就勋章</div></div>
+        <div class="svc-item" onclick="toast('幸福定制准备中')"><div class="svc-ico c-mint">🎁<span class="tag free">免费</span></div><div class="svc-name">幸福定制</div></div>
+      </div>
+    </div>
+
+    <div class="wrap" style="padding-top:0">
+      <div class="card vip-entry-card" onclick="goVip()">
+        <div class="vip-entry-crown">👑</div>
+        <div class="vip-entry-info">
+          <b>VIP 兑换码</b>
+          <small id="vipEntryStatus">输入兑换码，解锁全部 VIP 特权</small>
+        </div>
+        <div class="vip-entry-arrow">›</div>
+      </div>
+      <div class="card">
+        <h2>ℹ️ 应用信息</h2>
+        <div class="info-row" onclick="secretVerTap()" style="cursor:default"><span>版本</span><span id="appVer">v3.2.0</span></div>
+        <div class="info-row"><span>我的身份</span><span id="setMeShow">—</span></div>
+        <div class="info-row"><span>登录方式</span><span id="setLoginType">—</span></div>
+        <button class="ghost" onclick="checkUpdate()">检查更新</button>
+        <button class="ghost" onclick="go('settings')">小屋设置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 功能子页 ===== -->
+  <div id="checkPage" class="subpage">
+    <div class="wrap">
+      <div class="card">
+        <h2>✅ 每日打卡 <span class="badge" id="checkDate"></span></h2>
+        <div id="checkTasks"></div>
+      </div>
+      <div class="card">
+        <h2>➕ 自定义打卡</h2>
+        <div class="save-row"><input id="newTask" placeholder="添加专属打卡…" maxlength="20"><button onclick="addTask()">添加</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="annivPage" class="subpage">
+    <div class="wrap">
+      <div class="card"><h2>💗 纪念日倒计时</h2><div id="annivList"></div></div>
+      <div class="card">
+        <h2>➕ 添加纪念日</h2>
+        <div class="field"><input id="annTitle" placeholder="名称，如：恋爱纪念日"></div>
+        <div class="field"><input id="annDate" type="date"></div>
+        <button class="primary" onclick="addAnniv()">添加纪念日</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pigPage" class="subpage">
+    <div class="wrap">
+      <div class="card">
+        <div class="pig"><div class="emoji">🐷</div><div class="amt"><small>¥</small><span id="pigTotal">0</span></div>
+          <div style="color:var(--muted);font-size:12px;margin-top:4px">我们的恋爱基金</div></div>
+        <div class="save-row"><input id="saveAmt" type="number" placeholder="金额 ¥" min="1"><button onclick="addSaving()">存一笔</button></div>
+        <div class="save-list" id="saveList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chatPage" class="subpage">
+    <div class="wrap" style="padding-bottom:80px">
+      <div class="card" style="min-height:60vh"><h2>💌 甜言蜜语</h2><div id="msgList"></div></div>
+    </div>
+    <div class="input-bar">
+      <input id="msgInput" placeholder="说点悄悄话…" maxlength="100" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+
+  <div id="locPage" class="subpage">
+    <div class="wrap" style="padding:0 0 70px">
+      <div id="locMap" style="width:100%;height:52vh;min-height:340px"></div>
+      <div class="wrap">
+        <div class="card">
+          <h2>📍 两人实时位置</h2>
+          <div id="locDistance" style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:12px">正在获取位置…</div>
+          <div id="locList"></div>
+          <button class="primary" onclick="refreshLocation()" style="margin-top:12px">📍 更新我的位置</button>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:12px">
+            <input type="checkbox" id="autoLoc" checked onchange="toggleAutoLoc()"> 持续共享（每 10 秒自动更新）
+          </label>
+          <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.7">
+            位置只在你和小屋成员之间共享。需允许浏览器定位权限；室内或 GPS 弱时可能不准。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsPage" class="subpage">
+    <div class="wrap">
+      <div class="card">
+        <h2>⚙ 小屋设置</h2>
+        <div class="field"><label>你的昵称</label><input id="setMe" maxlength="12"></div>
+        <div class="field"><label>对方昵称</label><input id="setTa" maxlength="12"></div>
+        <div class="field"><label>在一起的日子</label><input id="setStart" type="date"></div>
+        <button class="primary" onclick="saveSetting()">保存设置</button>
+        <button class="ghost" onclick="logout()" style="color:#E86A6A">退出登录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <nav>
+    <button class="active" data-p="home" onclick="go('home')"><span class="ni">🏠</span>首页</button>
+    <button data-p="diary" onclick="go('diary')"><span class="ni">📖</span>心情日记</button>
+    <button class="nav-center" data-p="funcs" onclick="go('funcs')">
+      <div class="nc-wrap">🎒<span class="nc-dot"></span></div>
+      <span class="nc-label">百宝袋</span>
+    </button>
+    <button data-p="shop" onclick="go('shop')"><span class="ni">🏪</span>心动商城</button>
+    <button data-p="mine" onclick="go('mine')"><span class="ni">👤</span>个人中心</button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/vendor/leaflet.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

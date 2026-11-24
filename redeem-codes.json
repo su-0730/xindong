@@ -1,0 +1,82 @@
+{
+  "5201314": {
+    "used": false,
+    "multiUse": true,
+    "usedBy": [],
+    "by": null,
+    "coupleId": null,
+    "duration": 7,
+    "admin": false,
+    "scope": "viewer",
+    "note": "5211314的别名（易输错版）",
+    "usedAt": 1795497827538
+  },
+  "5211314": {
+    "used": false,
+    "multiUse": true,
+    "usedBy": [],
+    "by": null,
+    "coupleId": null,
+    "duration": 7,
+    "admin": false,
+    "scope": "viewer",
+    "note": "限时码：7天单向观看VIP，每对情侣各可用一次",
+    "usedAt": 1795497827522
+  },
+  "VIP2026": {
+    "used": false,
+    "by": null,
+    "coupleId": null,
+    "duration": 0,
+    "admin": false,
+    "scope": "both",
+    "note": "永久VIP演示码-双向"
+  },
+  "LOVE-8888": {
+    "used": false,
+    "by": null,
+    "coupleId": null,
+    "duration": 0,
+    "admin": false,
+    "scope": "both",
+    "note": "备用永久码-双向"
+  },
+  "XIN-6666": {
+    "used": false,
+    "by": null,
+    "coupleId": null,
+    "duration": 0,
+    "admin": false,
+    "scope": "both",
+    "note": "备用永久码-双向"
+  },
+  "SWEET-520": {
+    "used": false,
+    "by": null,
+    "coupleId": null,
+    "duration": 0,
+    "admin": false,
+    "scope": "both",
+    "note": "备用永久码-双向"
+  },
+  "ADMIN-6688": {
+    "used": true,
+    "by": "u_989d2076a08c942495",
+    "coupleId": "c_2195c54aab7a9da9eb",
+    "duration": 0,
+    "admin": true,
+    "scope": "both",
+    "note": "纯管理员码：只给管理员权限，不含VIP",
+    "byName": "曜",
+    "usedAt": 1795498202052
+  },
+  "SVIP-9999": {
+    "used": false,
+    "by": null,
+    "coupleId": null,
+    "duration": 0,
+    "admin": false,
+    "scope": "both",
+    "note": "永久VIP码（双向）"
+  }
+}

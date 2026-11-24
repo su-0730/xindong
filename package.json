@@ -1,0 +1,12 @@
+{
+  "name": "xindong-couple-app",
+  "version": "1.0.0",
+  "description": "心动日常 · 情侣小屋 —— 双人实时同步 PWA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

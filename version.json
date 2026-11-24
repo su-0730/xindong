@@ -1,0 +1,5 @@
+{
+  "version": "3.2.0",
+  "note": "健康用机加入整机App使用时长展示（原生APK的UsageStats上报）",
+  "force": false
+}

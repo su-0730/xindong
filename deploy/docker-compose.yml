@@ -1,0 +1,10 @@
+version: "3"
+services:
+  xindong:
+    build: ..
+    container_name: xindong
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
